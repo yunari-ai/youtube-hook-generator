@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Script Hook Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-light: #a78bfa;
+            --secondary: #3b82f6;
+            --bg-dark: #0f1117;
+            --bg-surface: #1a1f2e;
+            --bg-card: #2d3748;
+            --text-primary: #f8f9fa;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border: #334155;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1f2e 50%, var(--bg-dark) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border);
+            background: rgba(15, 17, 23, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 0;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .tagline {
+                display: block;
+            }
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .lang-btn {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .lang-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .lang-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        textarea {
+            flex: 1;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            transition: all 0.2s;
+            min-height: 250px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .char-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .output-area {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .output-box {
+            flex: 1;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-y: auto;
+            min-height: 250px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .output-box.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .hook-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .hook-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .hook-number {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .hook-text {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .output-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.625rem 1rem;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--primary);
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .btn.primary:hover {
+            background: var(--primary-light);
+            border-color: var(--primary-light);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .disclaimer {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--error);
+        }
+
+        .disclaimer-title {
+            font-weight: 700;
+            color: var(--error);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .disclaimer-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .ad-banner {
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .ad-placeholder {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .monetization {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .coffee-btn {
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .coffee-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(245, 158, 11, 0.3);
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            background: rgba(15, 17, 23, 0.5);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--success);
+            border-radius: 0.5rem;
+            padding: 1rem 1.5rem;
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        .toast.error {
+            border-left-color: var(--error);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 {
+                font-size: 1.875rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .container {
+                gap: 1.5rem;
+            }
+
+            textarea {
+                min-height: 200px;
+            }
+
+            .output-box {
+                min-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <span class="logo">🎬</span>
+                <div>
+                    <div class="title" id="headerTitle">YouTube Hook Generator</div>
+                    <div class="tagline" id="headerTagline">Generate viral video hooks</div>
+                </div>
+            </div>
+            <div class="language-selector">
+                <button class="lang-btn active" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="ja">日本語</button>
+                <button class="lang-btn" data-lang="es">ES</button>
+                <button class="lang-btn" data-lang="zh">中文</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1 id="heroTitle">Generate Viral YouTube Hooks</h1>
+            <p id="heroDesc">Create compelling opening lines that grab attention in the first 3 seconds. Perfect for YouTube, TikTok, and short-form video content.</p>
+        </div>
+
+        <div class="disclaimer">
+            <div class="disclaimer-title" id="disclaimerTitle">⚠️ Important Disclaimer</div>
+            <div class="disclaimer-text" id="disclaimerText">
+                Users assume all responsibility for generated outputs. This tool provides creative suggestions only. No data is stored or transmitted to external servers. Generated hooks are provided "as-is" without warranty.
+            </div>
+        </div>
+
+        <div class="ad-banner">
+            <div class="ad-placeholder" id="adPlaceholder">[Advertisement Space]</div>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <label class="card-label" id="inputLabel">Video Topic</label>
+                <div style="display: flex; flex-direction: column; flex: 1;">
+                    <textarea id="inputTopic" placeholder="e.g., 'How to make passive income with AI' or 'Top 5 productivity hacks for 2026'..."></textarea>
+                    <div class="char-count"><span id="charCount">0</span> / 200 characters</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <label class="card-label" id="outputLabel">Hook Ideas</label>
+                <div class="output-area">
+                    <div class="output-box empty" id="outputBox">
+                        <span id="outputPlaceholder">Your hooks will appear here...</span>
+                    </div>
+                    <div class="output-buttons" id="outputButtons" style="display: none;">
+                        <button class="btn" id="copyBtn" onclick="copyToClipboard()">
+                            <span>📋</span>
+                            <span id="copyBtnText">Copy All</span>
+                        </button>
+                        <button class="btn primary" id="downloadBtn" onclick="downloadHooks()">
+                            <span>⬇️</span>
+                            <span id="downloadBtnText">Download</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title" id="feature1Title">Instant Ideas</div>
+                <div class="feature-desc" id="feature1Desc">10 viral-worthy hooks in seconds</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title" id="feature2Title">Proven Formulas</div>
+                <div class="feature-desc" id="feature2Desc">Based on viral video psychology</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-title" id="feature3Title">Private</div>
+                <div class="feature-desc" id="feature3Desc">No data stored or transmitted</div>
+            </div>
+        </div>
+
+        <div class="monetization">
+            <button class="coffee-btn" onclick="openCoffeeLink()">☕ Buy Me a Coffee</button>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p id="footerText">Built with ❤️ for content creators. No login required. All processing happens in your browser.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer"></div>
+
+    <script>
+        const translations = {
+            en: {
+                headerTitle: 'YouTube Hook Generator',
+                headerTagline: 'Generate viral video hooks',
+                heroTitle: 'Generate Viral YouTube Hooks',
+                heroDesc: 'Create compelling opening lines that grab attention in the first 3 seconds. Perfect for YouTube, TikTok, and short-form video content.',
+                disclaimerTitle: '⚠️ Important Disclaimer',
+                disclaimerText: 'Users assume all responsibility for generated outputs. This tool provides creative suggestions only. No data is stored or transmitted to external servers. Generated hooks are provided "as-is" without warranty.',
+                adPlaceholder: '[Advertisement Space]',
+                inputLabel: 'Video Topic',
+                outputLabel: 'Hook Ideas',
+                outputPlaceholder: 'Your hooks will appear here...',
+                copyBtnText: 'Copy All',
+                downloadBtnText: 'Download',
+                feature1Title: 'Instant Ideas',
+                feature1Desc: '10 viral-worthy hooks in seconds',
+                feature2Title: 'Proven Formulas',
+                feature2Desc: 'Based on viral video psychology',
+                feature3Title: 'Private',
+                feature3Desc: 'No data stored or transmitted',
+                footerText: 'Built with ❤️ for content creators. No login required. All processing happens in your browser.',
+                inputPlaceholder: "e.g., 'How to make passive income with AI' or 'Top 5 productivity hacks for 2026'...",
+                copied: 'Copied to clipboard!',
+                downloaded: 'Downloaded!',
+                error: 'An error occurred',
+            },
+            ja: {
+                headerTitle: 'YouTubeフックジェネレーター',
+                headerTagline: 'バイラルビデオフックを生成',
+                heroTitle: 'バイラルなYouTubeフックを生成',
+                heroDesc: '最初の3秒で注目を集める魅力的なオープニングラインを作成します。YouTube、TikTok、短編動画コンテンツに最適です。',
+                disclaimerTitle: '⚠️ 重要な免責事項',
+                disclaimerText: 'ユーザーは生成された出力に対するすべての責任を負います。このツールはクリエイティブな提案のみを提供します。データは保存されたり、外部サーバーに送信されたりしません。生成されたフックは「現状のまま」で提供され、保証はありません。',
+                adPlaceholder: '[広告スペース]',
+                inputLabel: 'ビデオトピック',
+                outputLabel: 'フックアイデア',
+                outputPlaceholder: 'あなたのフックがここに表示されます...',
+                copyBtnText: 'すべてコピー',
+                downloadBtnText: 'ダウンロード',
+                feature1Title: 'インスタントアイデア',
+                feature1Desc: '数秒でバイラル価値のあるフック10個',
+                feature2Title: '実証済みの公式',
+                feature2Desc: 'バイラルビデオ心理学に基づく',
+                feature3Title: 'プライベート',
+                feature3Desc: 'データは保存・送信されません',
+                footerText: 'コンテンツクリエイター向けに❤️で作られました。ログイン不要。すべての処理はブラウザで行われます。',
+                inputPlaceholder: "例：'AIで受動的な収入を得る方法' または '2026年のトップ5生産性ハック'...",
+                copied: 'クリップボードにコピーしました！',
+                downloaded: 'ダウンロードしました！',
+                error: 'エラーが発生しました',
+            },
+            es: {
+                headerTitle: 'Generador de Ganchos de YouTube',
+                headerTagline: 'Genera ganchos de video viral',
+                heroTitle: 'Genera Ganchos Virales de YouTube',
+                heroDesc: 'Crea líneas de apertura convincentes que capturen la atención en los primeros 3 segundos. Perfecto para YouTube, TikTok y contenido de video corto.',
+                disclaimerTitle: '⚠️ Descargo de Responsabilidad Importante',
+                disclaimerText: 'Los usuarios asumen toda la responsabilidad por los resultados generados. Esta herramienta solo proporciona sugerencias creativas. No se almacenan ni transmiten datos a servidores externos. Los ganchos generados se proporcionan "tal cual" sin garantía.',
+                adPlaceholder: '[Espacio Publicitario]',
+                inputLabel: 'Tema del Video',
+                outputLabel: 'Ideas de Ganchos',
+                outputPlaceholder: 'Tus ganchos aparecerán aquí...',
+                copyBtnText: 'Copiar Todo',
+                downloadBtnText: 'Descargar',
+                feature1Title: 'Ideas Instantáneas',
+                feature1Desc: '10 ganchos dignos de viralidad en segundos',
+                feature2Title: 'Fórmulas Probadas',
+                feature2Desc: 'Basado en psicología de videos virales',
+                feature3Title: 'Privado',
+                feature3Desc: 'Sin almacenamiento ni transmisión de datos',
+                footerText: 'Construido con ❤️ para creadores de contenido. Sin inicio de sesión requerido. Todo el procesamiento ocurre en tu navegador.',
+                inputPlaceholder: "Ej: 'Cómo ganar ingresos pasivos con IA' o 'Top 5 trucos de productividad para 2026'...",
+                copied: '¡Copiado al portapapeles!',
+                downloaded: '¡Descargado!',
+                error: 'Ocurrió un error',
+            },
+            zh: {
+                headerTitle: 'YouTube钩子生成器',
+                headerTagline: '生成病毒式视频钩子',
+                heroTitle: '生成病毒式YouTube钩子',
+                heroDesc: '创建引人注目的开场白，在前3秒内吸引注意力。完美用于YouTube、TikTok和短视频内容。',
+                disclaimerTitle: '⚠️ 重要免责声明',
+                disclaimerText: '用户对生成的输出承担全部责任。本工具仅提供创意建议。不存储或向外部服务器传输数据。生成的钩子按"原样"提供，不提供任何保证。',
+                adPlaceholder: '[广告位置]',
+                inputLabel: '视频主题',
+                outputLabel: '钩子创意',
+                outputPlaceholder: '您的钩子将显示在此处...',
+                copyBtnText: '复制全部',
+                downloadBtnText: '下载',
+                feature1Title: '即时创意',
+                feature1Desc: '数秒内获得10个病毒级钩子',
+                feature2Title: '经证实的公式',
+                feature2Desc: '基于病毒视频心理学',
+                feature3Title: '隐私',
+                feature3Desc: '无数据存储或传输',
+                footerText: '用❤️为内容创作者打造。无需登录。所有处理都在浏览器中进行。',
+                inputPlaceholder: "例如：'如何用AI赚取被动收入' 或 '2026年前5大生产力技巧'...",
+                copied: '已复制到剪贴板！',
+                downloaded: '已下载！',
+                error: '发生错误',
+            }
+        };
+
+        let currentLanguage = 'en';
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLanguage = btn.dataset.lang;
+                updateLanguage();
+            });
+        });
+
+        function updateLanguage() {
+            const t = translations[currentLanguage];
+            Object.keys(t).forEach(key => {
+                const elem = document.getElementById(key);
+                if (elem) {
+                    if (key === 'inputPlaceholder') {
+                        document.getElementById('inputTopic').placeholder = t[key];
+                    } else {
+                        elem.textContent = t[key];
+                    }
+                }
+            });
+        }
+
+        const hookTemplates = {
+            en: [
+                "Wait until you see what happens at {0}...",
+                "Most people don't know this about {0}",
+                "I spent 30 days testing {0}, here's what I found",
+                "This {0} hack changed everything for me",
+                "Everyone's talking about {0} but nobody mentions this",
+                "The truth about {0} nobody wants to admit",
+                "I tried {0} for 100 days, here's the result",
+                "Stop doing {0} the wrong way",
+                "This {0} technique is insane",
+                "You've been doing {0} wrong your whole life"
+            ],
+            ja: [
+                "{0}で起こることを見るまで待ってください...",
+                "ほとんどの人は{0}についてこれを知りません",
+                "私は30日間{0}をテストしました、これが私が見つけたものです",
+                "この{0}のハックは私のためにすべてを変えました",
+                "皆が{0}について話していますが、誰もこれに言及していません",
+                "{0}についての誰も認めたくない真実",
+                "私は100日間{0}を試しました、結果はこれです",
+                "{0}を間違った方法で行うのをやめてください",
+                "この{0}テクニックは素晴らしいです",
+                "あなたはあなたの人生全体を{0}間違った方法でやってきました"
+            ],
+            es: [
+                "Espera a ver qué sucede con {0}...",
+                "La mayoría de la gente no sabe esto sobre {0}",
+                "Pasé 30 días probando {0}, esto es lo que encontré",
+                "Este truco de {0} lo cambió todo para mí",
+                "Todos hablan de {0} pero nadie menciona esto",
+                "La verdad sobre {0} que nadie quiere admitir",
+                "Intenté {0} durante 100 días, aquí está el resultado",
+                "Deja de hacer {0} de la manera incorrecta",
+                "Esta técnica de {0} es increíble",
+                "Has estado haciendo {0} de la manera incorrecta toda tu vida"
+            ],
+            zh: [
+                "等等看{0}会发生什么...",
+                "大多数人不知道关于{0}的这一点",
+                "我花了30天测试{0}，这是我的发现",
+                "这个{0}的技巧改变了我的一切",
+                "每个人都在谈论{0}，但没有人提到这个",
+                "关于{0}没有人想承认的真相",
+                "我尝试了100天的{0}，这是结果",
+                "停止以错误的方式做{0}",
+                "这个{0}技术太疯狂了",
+                "你一生都在以错误的方式做{0}"
+            ]
+        };
+
+        const inputTopic = document.getElementById('inputTopic');
+        const outputBox = document.getElementById('outputBox');
+        const charCount = document.getElementById('charCount');
+        const outputButtons = document.getElementById('outputButtons');
+
+        inputTopic.addEventListener('input', () => {
+            charCount.textContent = Math.min(inputTopic.value.length, 200);
+            if (inputTopic.value.trim().length > 0) {
+                generateHooks(inputTopic.value);
+            } else {
+                outputBox.classList.add('empty');
+                outputBox.innerHTML = `<span id="outputPlaceholder">${translations[currentLanguage].outputPlaceholder}</span>`;
+                outputButtons.style.display = 'none';
+            }
+        });
+
+        function generateHooks(topic) {
+            outputBox.classList.remove('empty');
+            
+            const templates = hookTemplates[currentLanguage] || hookTemplates.en;
+            let html = '';
+
+            templates.forEach((template, index) => {
+                const hook = template.replace('{0}', topic);
+                html += `<div class="hook-item">
+                    <div class="hook-number">Hook ${index + 1}/10</div>
+                    <div class="hook-text">"${hook}"</div>
+                </div>`;
+            });
+
+            outputBox.innerHTML = html;
+            outputButtons.style.display = 'flex';
+            window.hooksData = templates.map(t => `"${t.replace('{0}', topic)}"`).join('\n\n');
+        }
+
+        function copyToClipboard() {
+            if (!window.hooksData) return;
+            navigator.clipboard.writeText(window.hooksData).then(() => {
+                showToast(translations[currentLanguage].copied, 'success');
+            }).catch(() => {
+                showToast(translations[currentLanguage].error, 'error');
+            });
+        }
+
+        function downloadHooks() {
+            if (!window.hooksData) return;
+            const element = document.createElement('a');
+            const file = new Blob([window.hooksData], { type: 'text/plain' });
+            element.href = URL.createObjectURL(file);
+            element.download = 'youtube-hooks.txt';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            showToast(translations[currentLanguage].downloaded, 'success');
+        }
+
+        function openCoffeeLink() {
+            window.open('https://www.buymeacoffee.com/yunari', '_blank');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.getElementById('toastContainer').appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        updateLanguage();
+    </script>
+</body>
+</html>
